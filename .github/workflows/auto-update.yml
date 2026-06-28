@@ -1,0 +1,42 @@
+name: Auto Update Container and Logs
+
+on:
+  # Allows manual execution from the GitHub Actions tab
+  workflow_dispatch:
+  # Optional: Runs automatically every day at midnight (UTC)
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # Crucial to allow the action to push commits
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -t local-updater .
+
+      - name: Run Docker Container
+        run: docker run --name updater-container local-updater
+
+      - name: Copy updated logs from container
+        run: docker cp updater-container:/app/activity_log.txt ./activity_log.txt
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if there are changes to commit
+          if ! git diff --quiet; then
+            git add activity_log.txt
+            git commit -m "chore: automated log update via docker [skip ci]"
+            git push
+          else
+            echo "No changes detected."
+          fi
