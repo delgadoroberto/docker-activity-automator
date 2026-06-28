@@ -1,6 +1,6 @@
 # docker-activity-automator
 
-[![Auto Update Container and Logs](https://github.com/YOUR_GITHUB_USERNAME/docker-activity-automator/actions/workflows/auto-update.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/docker-activity-automator/actions)
+[![Auto Update Container and Logs](https://github.com/delgadoroberto/docker-activity-automator/actions/workflows/auto-update.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/docker-activity-automator/actions)
 
 An automated, Docker-based activity and log generator driven by GitHub Actions. This project demonstrates containerized execution, modern Bash scripting, and automated repository maintenance via CI/CD pipelines.
 
@@ -105,21 +105,3 @@ cat activity_log.txt
 ## 📝 License
 
 This project is open source and available under the MIT License.
-
----
-
-## 📌 Customization
-
-Before publishing the repository, replace every occurrence of:
-
-```text
-YOUR_GITHUB_USERNAME
-```
-
-with your actual GitHub username. This includes:
-
-- The GitHub Actions badge URL.
-- The GitHub Actions page link.
-- The repository clone URL.
-
-Once updated, the badge will correctly display the workflow status and all repository links will function properly.
