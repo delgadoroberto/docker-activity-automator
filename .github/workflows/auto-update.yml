@@ -1,41 +1,65 @@
 name: Auto Update Container and Logs
 
 on:
-  # Allows manual execution from the GitHub Actions tab
   workflow_dispatch:
-  # Optional: Runs automatically every day at midnight (UTC)
   schedule:
     - cron: '0 0 * * *'
 
 jobs:
-  build-and-run:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write  # Crucial to allow the action to push commits
+  # Job 1: Lint and Validate the Bash script across multiple environments
+  validate-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Matrix testing: Runs parallel tests on different Ubuntu versions
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        run: docker build -t local-updater .
+      - name: Run ShellCheck (Static Analysis)
+        name: Validate Bash Syntax
+        run: |
+          # ShellCheck scans the script for bugs, security vulnerabilities, and bad practices
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck script.sh
+
+      - name: Test Script Execution Locally
+        run: |
+          # Verifies the script executes without errors in the matrix runner
+          chmod +x script.sh
+          ./script.sh
+
+  # Job 2: Build and Push (Only runs if the validation job passes)
+  build-and-run:
+    needs: validate-and-test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Hardened Docker Image
+        run: docker build -t docker-activity-automator .
 
       - name: Run Docker Container
-        run: docker run --name updater-container local-updater
+        run: docker run --name automator-container docker-activity-automator
 
       - name: Copy updated logs from container
-        run: docker cp updater-container:/app/activity_log.txt ./activity_log.txt
+        run: docker cp automator-container:/app/activity_log.txt ./activity_log.txt
 
       - name: Commit and Push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Check if there are changes to commit
           if ! git diff --quiet; then
             git add activity_log.txt
-            git commit -m "chore: automated log update via docker [skip ci]"
+            git commit -m "chore: automated metrics update via hardened docker [skip ci]"
             git push
           else
             echo "No changes detected."
